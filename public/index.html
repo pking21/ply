@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hidden Link Generator</title>
+<style>
+  :root{
+    --bg-0:#0a0a14; --line:#ffffff1a; --text:#f4f2ff; --sub:#9d97c4;
+    --accent-a:#7c3aed; --accent-b:#ec4899; --teal:#14b8a6;
+    --mono:'JetBrains Mono','Courier New',monospace;
+  }
+  *{box-sizing:border-box;}
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+  body{
+    margin:0; font-family:'Inter',-apple-system,sans-serif;
+    background:
+      radial-gradient(circle at 85% 10%, #14b8a622 0%, transparent 45%),
+      radial-gradient(circle at 10% 90%, #7c3aed22 0%, transparent 45%),
+      var(--bg-0);
+    color:var(--text); min-height:100vh; padding:32px 16px;
+  }
+  .wrap{max-width:620px;margin:0 auto;}
+  .card{
+    background:linear-gradient(180deg,#181729cc,#131223cc);
+    border:1px solid var(--line); border-radius:20px; padding:36px 32px;
+    backdrop-filter:blur(10px); box-shadow:0 30px 80px -30px #000c; position:relative; overflow:hidden;
+  }
+  .eyebrow{display:flex; align-items:center; gap:8px; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--teal); font-weight:600; margin-bottom:10px;}
+  h1{font-size:28px; font-weight:800; margin:0 0 8px; background:linear-gradient(90deg,#fff,#c9c3f0); -webkit-background-clip:text; background-clip:text; color:transparent; letter-spacing:-.02em;}
+  .sub{color:var(--sub); font-size:14.5px; line-height:1.5; margin:0 0 28px;}
+  label{display:flex; align-items:center; gap:6px; font-size:13.5px; font-weight:600; margin-bottom:8px; color:#e5e2fa;}
+  label .req{color:var(--accent-b);}
+  .field{margin-bottom:20px;}
+  select, input[type=text]{
+    width:100%; padding:14px 16px; background:#0f0e1c99; border:1px solid var(--line);
+    border-radius:12px; color:var(--text); font-size:14.5px; font-family:inherit; outline:none;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  select:focus, input:focus{border-color:#9d7bff88; box-shadow:0 0 0 3px #7c3aed22;}
+  select{appearance:none; cursor:pointer;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239d97c4' stroke-width='2'><path d='M6 9l6 6 6-6'/></svg>");
+    background-repeat:no-repeat; background-position:right 14px center; background-size:18px; padding-right:44px;
+  }
+  input::placeholder{color:#726c99;}
+  .hint{font-size:12px;color:#6f699a;margin-top:6px;}
+  button.generate{
+    width:100%; border:none; cursor:pointer; padding:16px; border-radius:12px;
+    font-size:15px; font-weight:700; letter-spacing:.04em; color:#fff;
+    background:linear-gradient(90deg,var(--accent-a),var(--accent-b));
+    box-shadow:0 12px 30px -10px #ec489988; transition:transform .15s, box-shadow .15s;
+  }
+  button.generate:hover{transform:translateY(-1px); box-shadow:0 16px 36px -8px #ec4899aa;}
+  button.generate:disabled{opacity:.6; cursor:not-allowed; transform:none;}
+  .error{color:#ff8fa3; font-size:13px; margin:-8px 0 16px; display:none;}
+  .result{display:none; margin-top:28px; padding-top:24px; border-top:1px dashed var(--line);}
+  .result.show{display:block;}
+  .out-label{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;}
+  .out-label span{font-size:12.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--teal);}
+  .copy-btn{background:#ffffff10; border:1px solid var(--line); color:#e5e2fa; font-size:12px; padding:6px 12px; border-radius:8px; cursor:pointer; font-family:inherit; font-weight:600;}
+  .copy-btn:hover{background:#ffffff1c;}
+  .code-box{background:#0a0a16; border:1px solid var(--line); border-radius:10px; padding:14px 16px; font-family:var(--mono); font-size:12.5px; color:#c9f7e8; word-break:break-all; max-height:110px; overflow-y:auto; line-height:1.6;}
+  .code-box.iframe-box{color:#ffd8e8;}
+  .out-block{margin-bottom:20px;}
+  .preview{margin-top:22px; border-radius:12px; overflow:hidden; border:1px solid var(--line); background:#000;}
+  .preview iframe{width:100%; height:320px; border:0; display:block;}
+  .toast{position:fixed; left:50%; bottom:28px; transform:translateX(-50%) translateY(20px); background:#181729; border:1px solid #9d7bff55; color:#fff; padding:10px 18px; border-radius:10px; font-size:13px; font-weight:600; opacity:0; transition:all .25s; pointer-events:none; box-shadow:0 10px 30px -10px #000a;}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  .footnote{color:#565179; font-size:11.5px; margin-top:22px; line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="eyebrow">🔗 REAL SHORT LINK</div>
+    <h1>Make a Hidden Link</h1>
+    <p class="sub">Video URL ကိုထည့်ပါ — server က database ထဲမှာသိမ်းပြီး တကယ့် short link (<code>/v/xxxxxxxx</code>) ထုတ်ပေးမယ်။ Video ကို server ကနေ proxy streaming လုပ်ပေးလို့ မူရင်း URL ကို page source ထဲမှာ လုံးဝမမြင်ရပါဘူး။</p>
+
+    <div class="field">
+      <label>Select the Player <span class="req">*</span></label>
+      <select id="player">
+        <option value="html5">HTML5 Video (native, fastest)</option>
+        <option value="plyr">Plyr (clean skin)</option>
+        <option value="artplayer">ArtPlayer (full controls)</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Video URL <span class="req">*</span></label>
+      <input type="text" id="videoUrl" placeholder="https://archive.org/download/.../video.mp4">
+    </div>
+
+    <div class="field">
+      <label>Poster Image URL (Optional)</label>
+      <input type="text" id="posterUrl" placeholder="https://...jpg">
+      <div class="hint">Thumbnail preview အတွက်။ မထည့်လည်း ရပါတယ်။</div>
+    </div>
+
+    <div class="error" id="errMsg"></div>
+
+    <button class="generate" id="genBtn">GENERATE LINK</button>
+
+    <div class="result" id="result">
+      <div class="out-block">
+        <div class="out-label"><span>Hidden Link</span>
+          <button class="copy-btn" data-copy="linkOut">Copy</button>
+        </div>
+        <div class="code-box" id="linkOut"></div>
+      </div>
+      <div class="out-block">
+        <div class="out-label"><span>Embed / Iframe Code</span>
+          <button class="copy-btn" data-copy="iframeOut">Copy</button>
+        </div>
+        <div class="code-box iframe-box" id="iframeOut"></div>
+      </div>
+      <div class="preview" id="preview"></div>
+      <div class="footnote">Link ဟာ server ပေါ်မှာ တကယ်သိမ်းထားတာမို့ ဘယ်သူ့ဆီ share လုပ်လုပ် အလုပ်လုပ်ပါမယ် (server အလုပ်လုပ်နေသရွေ့)။</div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast">Copied!</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+$('genBtn').addEventListener('click', async () => {
+  const player = $('player').value;
+  const url = $('videoUrl').value.trim();
+  const poster = $('posterUrl').value.trim();
+  const err = $('errMsg');
+  err.style.display = 'none';
+
+  if(!url || !/^https?:\/\//i.test(url)){
+    err.textContent = 'Video URL ထည့်ပေးပါ (http:// or https:// နဲ့ စရမည်)';
+    err.style.display = 'block';
+    return;
+  }
+
+  $('genBtn').disabled = true;
+  $('genBtn').textContent = 'GENERATING...';
+
+  try {
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ url, poster, player })
+    });
+    const data = await res.json();
+    if(!res.ok){
+      err.textContent = data.error || 'Something went wrong.';
+      err.style.display = 'block';
+      return;
+    }
+
+    $('linkOut').textContent = data.link;
+    $('iframeOut').textContent = data.embedCode;
+
+    const preview = $('preview');
+    preview.innerHTML = '';
+    const iframe = document.createElement('iframe');
+    iframe.src = data.link;
+    iframe.allow = 'autoplay; fullscreen; picture-in-picture';
+    iframe.allowFullscreen = true;
+    preview.appendChild(iframe);
+
+    $('result').classList.add('show');
+  } catch(e){
+    err.textContent = 'Server ကို ဆက်သွယ်လို့ မရပါ။';
+    err.style.display = 'block';
+  } finally {
+    $('genBtn').disabled = false;
+    $('genBtn').textContent = 'GENERATE LINK';
+  }
+});
+
+document.querySelectorAll('.copy-btn').forEach(btn=>{
+  btn.addEventListener('click', () => {
+    const text = $(btn.dataset.copy).textContent;
+    navigator.clipboard.writeText(text).then(()=>{
+      const toast = $('toast');
+      toast.classList.add('show');
+      setTimeout(()=>toast.classList.remove('show'), 1400);
+    });
+  });
+});
+</script>
+</body>
+</html>
